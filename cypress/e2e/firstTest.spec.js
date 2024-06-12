@@ -252,4 +252,92 @@ describe("First Test suite", () => {
         cy.wait(1000);
     })
 
+    it.only("Web tables", () => {
+        cy.visit("/");
+        cy.contains("Tables & Data").click();
+        cy.wait(1000);
+        cy.contains("Smart Table").click();
+        cy.wait(1000);
+
+        // 1 Get the row by text
+        cy.get('tbody').contains('tr', 'Larry').then( tableRow => {
+            cy.wrap(tableRow).find('.nb-edit').click();
+            cy.wait(1000);
+            cy.wrap(tableRow).find('[placeholder="Age"]').clear().type('35');
+            cy.wait(1000);
+            cy.wrap(tableRow).find('.nb-checkmark').click();
+            cy.wait(1000);
+            cy.wrap(tableRow).find('td').eq(6).should('contain', '35');
+            cy.wait(1000);
+        })
+
+        // 2 Get row by index
+        cy.get('thead').find('.nb-plus').click();
+        cy.wait(1000);
+        cy.get('thead').find('tr').eq(2).then( tableRow => {
+            cy.wrap(tableRow).find('[placeholder="First Name"]').type('John');
+            cy.wait(1000);
+            cy.wrap(tableRow).find('[placeholder="Last Name"]').type('Smith');
+            cy.wait(1000);
+            cy.wrap(tableRow).find('.nb-checkmark').click();
+            cy.wait(1000);
+        })
+
+        cy.get('tbody tr').first().find('td').then( tableColumns => {
+            cy.wrap(tableColumns).eq(2).should('contain', 'John');
+            cy.wrap(tableColumns).eq(3).should('contain', 'Smith');
+        })
+
+        //3 Get each row validation
+        const age = [20, 30, 40, 200];
+
+        cy.wrap(age).each( age => {
+            cy.get('thead [placeholder="Age"]').clear().type(age);
+            cy.wait(1000);
+            cy.get('tbody tr').each( tableRow => {
+                if ( age === 200) {
+                    cy.wrap(tableRow).should('contain', 'No data found');
+                } else {
+                    cy.wrap(tableRow).find('td').eq(6).should('contain', age);
+                }
+            })
+        })
+        
+    })
+
+    it.only("Tooltip", () => {
+        cy.visit("/");
+        cy.contains("Modal & Overlays").click();
+        cy.wait(1000);
+        cy.contains("Tooltip").click();
+        cy.wait(1000);
+
+        cy.contains('nb-card', 'Colored Tooltips').contains('Default').click();
+        cy.get('nb-tooltip').should('contain', 'This is a tooltip');
+
+        cy.wait(1000);
+    })
+
+    it.only("dialog box", () => {
+        cy.visit("/");
+        cy.contains("Tables & Data").click();
+        cy.wait(1000);
+        cy.contains("Smart Table").click();
+        cy.wait(1000);
+
+        // 1
+        cy.get('tbody tr').first().find('.nb-trash').click();
+        cy.wait(1000);
+        cy.on('window:confirm', (confirm) => {
+            expect(confirm).to.equal('Are you sure you want to delete?')
+        })
+
+        // 2
+        stub = cy.stub();
+        cy.on('window:confirm', stub);
+        cy.get('tbody tr').first().find('.nb-trash').click().then(() => {
+            expect(stub.getCall(0)).to.be.calledWith('Are you sure you want to delete?')
+        })
+    })
+
 });
